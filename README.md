@@ -25,4 +25,4 @@ This is a simple WPF-based launcher application designed to start external engin
 
 ## License
 
-This is a simple internal tool. No license is included by default.
+This project is released as open source and is publicly available.  
