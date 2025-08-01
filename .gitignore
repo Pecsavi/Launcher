@@ -3,6 +3,8 @@
 *.user
 *.userosscache
 *.sln.docstates
+settings.json
+droppedfiles.txt
 
 # Build results
 bin/
