@@ -1,4 +1,5 @@
-<Controls:MetroWindow x:Class="Launcher.MainWindow"
+<Controls:MetroWindow x:Class="Launcher.MainWindow"               
+        
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,7 +12,11 @@
         Background="Black"
         AllowDrop="True"
         Drop="Window_Drop"
-        DragOver="Window_DragOver">
+        DragOver="Window_DragOver"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks">
+
+
 
     <!-- Flyout szekcio -->
     <Controls:MetroWindow.Flyouts>
@@ -37,8 +42,28 @@
                 <!-- Separator -->
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
+        <!-- Ikon -->
+        <Button x:Name="UpdateNotificationButton"
+        Grid.Row="0"
+         Width="40" Height="40"
+         HorizontalAlignment="Right"
+         VerticalAlignment="Top"
+              
+         Margin="10"
+         ToolTip="Neue Version verfugbar"
+         Visibility="Visible"
+         Click="UpdateNotificationButton_Click"
+         Panel.ZIndex="100">
 
-            <!-- Programs -->
+            <Button.Content>
+                
+                <iconPacks:PackIconMaterial Kind="AlertCircle"
+                                      Width="25" Height="25
+                                            "
+                                      Foreground="Orange"/>
+            </Button.Content>
+        </Button>
+        <!-- Programs -->
             <StackPanel Grid.Row="0" Margin="10">
                 <TextBlock Text="Installiert/fix Programme" FontSize="16" FontWeight="Bold" Foreground="White" />
             <ScrollViewer VerticalScrollBarVisibility="Auto" Height="200">
@@ -47,7 +72,7 @@
             <!-- buttons -->
             </StackPanel>
 
-            <!-- Separator -->
+        <!-- Separator -->
             <Separator Grid.Row="1" Margin="0,5" Background="Gray" Height="1"/>
 
             <!--Separator Background="LightGray" Height="1" />-->

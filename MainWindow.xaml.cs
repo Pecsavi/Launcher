@@ -15,6 +15,8 @@
 // ============================================================================
 
 using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
+using Newtonsoft.Json;
 using NLog;
 using System;
 using System.Diagnostics;
@@ -22,32 +24,73 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Verrollungsnachweis;
+using static Launcher.UpdateWindow;
+
 
 
 namespace Launcher
 {
-    
+
+
+
 
     public partial class MainWindow : MetroWindow
     {
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
+        private readonly IDialogCoordinator _dialogCoordinator;
+        private ProgramManager programManager;
+        public static MainWindow Instance { get; private set; }
+        private readonly ProgramUpdater updater;
+        string basePath;
+
+
         public MainWindow()
         {
             InitializeComponent();
-
+            Instance = this;
+            this.Loaded += MainWindow_Loaded;
+            DialogParticipation.SetRegister(this, this);
+            _dialogCoordinator = DialogCoordinator.Instance;
             LoggerService.Info("Application started");
-            LoggerService.UserActivity("Application started");
-            GenerateProgramList();
+            LoggerService.UserActivity("Sign for Server");
+            updater = new ProgramUpdater(_dialogCoordinator, this);
+
+            Loaded += async (s, e) =>
+            {
+                await updater.CheckForUpdates();
+                basePath = ConfigurationProvider.Settings.ProgramBasePath;
+                if (string.IsNullOrWhiteSpace(basePath))
+                {
+                    await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "ProgramBasePath fehlt in settings.json");
+                    return;
+                }
+                programManager = new ProgramManager(basePath);
+
+                await GenerateProgramList();
+
+            };
+
+
             LoadDroppedFiles();
         }
-
-        private void GenerateProgramList()
+        private void UpdateNotificationButton_Click(object sender, RoutedEventArgs e)
         {
-            string basePath = @"C:\Program Files (x86)\RstabExternal";
+            var updateWindow = new UpdateWindow();
+            updateWindow.Owner = this;
+            updateWindow.ShowDialog();
+        }
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            UpdateNotificationButton.Visibility = Visibility.Visible;
+        }
+
+        private async Task GenerateProgramList()
+        {
+
+
             if (!Directory.Exists(basePath))
             {
-                MessageBox.Show("Der Ordner 'RstabExternal' wurde nicht gefunden.", "Hiba", MessageBoxButton.OK, MessageBoxImage.Error);
+                await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Der Ordner 'RstabExternal' wurde nicht gefunden.");
                 LoggerService.Warn("Der Ordner 'RstabExternal' wurde nicht gefunden.");
                 return;
             }
@@ -82,7 +125,7 @@ namespace Launcher
                     Margin = new Thickness(0, 0, 10, 0)
 
                 };
-                exeButton.Click += (s, e) =>
+                exeButton.Click += async (s, e) =>
                 {
 
                     var startInfo = new ProcessStartInfo
@@ -98,7 +141,7 @@ namespace Launcher
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Start fehlgeschlagen: " + ex.Message);
+                        await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Start fehlgeschlagen: " + ex.Message);
                         LoggerService.Warn("102 exeButton_Click start fehlgeschlagen");
                     }
 
@@ -116,7 +159,7 @@ namespace Launcher
                 };
 
                 row.Children.Add(exeButton);
-               
+
                 ProgramListPanel.Children.Add(row);
             }
         }
@@ -138,7 +181,7 @@ namespace Launcher
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 var existing = File.Exists("droppedfiles.txt") ? File.ReadAllLines("droppedfiles.txt").ToList() : new List<string>();
 
-               
+
 
                 foreach (var file in files)
                 {
@@ -152,24 +195,28 @@ namespace Launcher
                     {
                         Content = Path.GetFileName(file),
                         Width = 200,
-                        Height = 30, 
+                        Height = 30,
                         Margin = new Thickness(0, 5, 0, 0)
                     };
 
-                    fileButton.Click += (s, args) =>
+                    fileButton.Click += async (s, args) =>
                     {
                         try { Process.Start(new ProcessStartInfo(file) { UseShellExecute = true }); }
-                        catch (Exception ex) { MessageBox.Show("Konnte nicht geöffnet werden: " + ex.Message); LoggerService.Warn("162. File konnte nicht geöffnet werden"); }
+                        catch (Exception ex)
+                        {
+                            await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Konnte nicht geöffnet werden: " + ex.Message);
+                            LoggerService.Warn("162. File konnte nicht geöffnet werden");
+                        }
                     };
 
                     // Kontextusmenü létrehozása
                     var contextMenu = new ContextMenu();
 
                     var openItem = new MenuItem { Header = "Öffnen" };
-                    openItem.Click += (s, args) =>
+                    openItem.Click += async (s, args) =>
                     {
                         try { Process.Start(new ProcessStartInfo(file) { UseShellExecute = true }); }
-                        catch (Exception ex) { MessageBox.Show("Konnte nicht geöffnet werden: " + ex.Message); LoggerService.Warn("172. File konnte nicht geöffnet werden"); }
+                        catch (Exception ex) { await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Konnte nicht geöffnet werden: " + ex.Message); LoggerService.Warn("172. File konnte nicht geöffnet werden"); }
                     };
 
                     var deleteItem = new MenuItem { Header = "Löschen" };
@@ -186,11 +233,11 @@ namespace Launcher
 
 
                     container.Children.Add(fileButton);
-     
+
 
                     FileListPanel.Children.Add(container);
 
-//ProgramListPanel.Children.Add(fileButton);
+
                 }
 
                 File.WriteAllLines("droppedfiles.txt", existing);
@@ -208,10 +255,16 @@ namespace Launcher
             if (!File.Exists(filePath))
                 return;
 
-            var lines = File.ReadAllLines(filePath);
+            var lines = File.ReadAllLines(filePath).ToList();
+            var validFiles = lines.Where(File.Exists).ToList();
+
+            if (validFiles.Count != lines.Count)
+                File.WriteAllLines(filePath, validFiles);
+
             foreach (var file in lines)
             {
                 if (!File.Exists(file)) continue;
+                string currentFile = file;
 
                 var container = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
 
@@ -224,26 +277,35 @@ namespace Launcher
                 };
 
 
-                fileButton.Click += (s, e) =>
+                fileButton.Click += async (s, e) =>
                 {
                     try { Process.Start(new ProcessStartInfo(file) { UseShellExecute = true }); }
-                    catch (Exception ex) { MessageBox.Show("Konnte nicht geöffnet werden: " + ex.Message); LoggerService.Warn("230. File konnte nicht geöffnet werden"); }
+                    catch (Exception ex)
+                    {
+                        await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Konnte nicht geöffnet werden: " + ex.Message);
+                        LoggerService.Warn("230. File konnte nicht geöffnet werden");
+                    }
                 };
 
-                // Kontextusmenü létrehozása
+                // Kontextmenu
                 var contextMenu = new ContextMenu();
 
                 var openItem = new MenuItem { Header = "Öffnen" };
-                openItem.Click += (s, args) =>
+                openItem.Click += async (s, args) =>
                 {
                     try { Process.Start(new ProcessStartInfo(file) { UseShellExecute = true }); }
-                    catch (Exception ex) { MessageBox.Show("Konnte nicht geöffnet werden: " + ex.Message); LoggerService.Warn("240. File konnte nicht geöffnet werden"); }
+                    catch (Exception ex)
+                    {
+                        await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Konnte nicht geöffnet werden: " + ex.Message);
+                        LoggerService.Warn("240. File konnte nicht geöffnet werden");
+                    }
                 };
 
                 var deleteItem = new MenuItem { Header = "Löschen" };
                 deleteItem.Click += (s, args) =>
                 {
                     FileListPanel.Children.Remove(container);
+                    var existing = File.ReadAllLines("droppedfiles.txt").ToList();
                     existing.Remove(file);
                     File.WriteAllLines("droppedfiles.txt", existing);
                 };
