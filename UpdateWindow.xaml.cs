@@ -2,6 +2,7 @@
 using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 
@@ -12,11 +13,12 @@ namespace Launcher
     /// </summary>
     public partial class UpdateWindow : MetroWindow
     {
-        public List<UpdateItem> ItemsToInstall { get; set; } = new();
+        public ObservableCollection<UpdateItem> ItemsToInstall { get; set; } = new();
 
         public UpdateWindow()
         {
             InitializeComponent();
+            DataContext = this;
             LoadUpdatesAsync();
         }
 
@@ -32,12 +34,17 @@ namespace Launcher
                     return;
                 }
 
-                ItemsToInstall = validUpdates.Select(u => new UpdateItem
+                ItemsToInstall.Clear();
+                foreach (var u in validUpdates)
                 {
-                    ProgramName = u.ProgramName,
-                    UpdateType = u.UpdateType,
-                    IsSelected = true
-                }).ToList();
+                    ItemsToInstall.Add(new UpdateItem
+                    {
+                        ProgramName = u.ProgramName,
+                        UpdateType = u.UpdateType,
+                        IsSelected = true
+                    });
+                }
+
 
                 UpdateItemsList.ItemsSource = ItemsToInstall;
             }

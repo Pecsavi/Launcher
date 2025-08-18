@@ -27,18 +27,18 @@
                 <TextBlock Text="Installieren" Grid.Column="2" FontWeight="Bold" Margin="10,0,0,0"/>
             </Grid>
 
-            <ItemsControl x:Name="UpdateItemsList">
-                <ItemsControl.ItemTemplate>
+            <ListBox x:Name="UpdateItemsList" ItemsSource="{Binding ItemsToInstall}">
+                <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Margin="5">
                             <TextBlock Text="{Binding ProgramName}" Width="200"/>
                             <TextBlock Text="{Binding UpdateType}" Width="150" Margin="10,0,0,0"/>
-                            <CheckBox Content=""
-                       IsChecked="{Binding IsSelected}" Margin="10,0,0,0"/>
+                            <CheckBox IsChecked="{Binding IsSelected}" Margin="10,0,0,0"/>
                         </StackPanel>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
 
             <Button Content="Installieren"
                     HorizontalAlignment="Right"
