@@ -60,5 +60,28 @@ namespace Launcher
 
             
         }
+
+        public static async Task<List<(string ProgramName, string UpdateType)>> GetValidUpdatesAsync()
+        {
+            SettingsReader.LoadSettingsInfo();
+            if (SettingsReader.Settings == null ||
+                !SettingsReader.IsInternetAvailable() ||
+                !SettingsReader.ValidateCriticalPaths(out _))
+            {
+                return new();
+            }
+
+            var remotePrograms = ProgramsInfoReader.FetchProgramsInfo(SettingsReader.Settings.VersionPath);
+            var localVersions = VersionComparer.GetInstalledVersions(SettingsReader.Settings.ProgramBasePath);
+            var updateList = VersionComparer.CompareVersions(remotePrograms, localVersions);
+
+            var validUpdates = await SetupFileChecker.ValidateAndDownloadInstallers(
+                updateList.Select(u => (u.ProgramName, u.Status)).ToList(),
+                remotePrograms,
+                SettingsReader.Settings.UpdatePath);
+
+            return validUpdates;
+        }
+
     }
 }

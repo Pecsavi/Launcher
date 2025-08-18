@@ -40,6 +40,8 @@ namespace Launcher
         public readonly IDialogCoordinator _dialogCoordinator;
         public static MainWindow Instance { get; private set; }
         string basePath;
+        private DroppedFileManager droppedFileManager = new DroppedFileManager();
+
 
 
         public MainWindow()
@@ -52,17 +54,17 @@ namespace Launcher
             _dialogCoordinator = DialogCoordinator.Instance;
             LoggerService.Info("Application started");
             LoggerService.UserActivity("Sign for Server");
-          
+
             Loaded += async (s, e) =>
             {
-              basePath = SettingsReader.Settings.ProgramBasePath;
+                basePath = SettingsReader.Settings.ProgramBasePath;
                 if (string.IsNullOrWhiteSpace(basePath))
                 {
                     await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "ProgramBasePath fehlt in settings.json");
                     return;
                 }
-            await GenerateProgramList();
-            await UpdateManager.RunUpdateAsync();
+                await GenerateProgramList();
+                await UpdateManager.RunUpdateAsync();
 
             };
 
@@ -175,7 +177,7 @@ namespace Launcher
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                var existing = File.Exists("droppedfiles.txt") ? File.ReadAllLines("droppedfiles.txt").ToList() : new List<string>();
+                var existing = File.Exists("droppedfiles.txt") ? droppedFileManager.LoadFiles().ToList() : new List<string>();
 
 
 
@@ -242,7 +244,7 @@ namespace Launcher
         private void LoadDroppedFiles()
         {
             var existing = File.Exists("droppedfiles.txt")
-    ? File.ReadAllLines("droppedfiles.txt").ToList()
+    ? droppedFileManager.LoadFiles().ToList()
     : new List<string>();
 
             string filePath = "droppedfiles.txt";
@@ -299,7 +301,7 @@ namespace Launcher
                 deleteItem.Click += (s, args) =>
                 {
                     FileListPanel.Children.Remove(container);
-                    var existing = File.ReadAllLines("droppedfiles.txt").ToList();
+                    var existing = droppedFileManager.LoadFiles().ToList();
                     existing.Remove(file);
                     File.WriteAllLines("droppedfiles.txt", existing);
                 };

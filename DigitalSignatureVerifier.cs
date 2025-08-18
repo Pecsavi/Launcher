@@ -1,28 +1,26 @@
-﻿using Launcher;
-using System.Net;
-using System.Security.Cryptography;
+﻿
+using System;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.IO;
 
-public static class DigitalSignatureVerifier
+namespace Launcher
 {
-
-    public static bool IsValid(string exePath)
+    public static class DigitalSignatureVerifier
     {
-        try
+        public static bool IsValid(string exePath)
         {
-            string certPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "pcs.cer");
-            byte[] certBytes = File.ReadAllBytes(certPath);
-            var cert = new X509Certificate2(certBytes);
+            try
+            {
+                var cert = CertificateLoader.LoadCertificateFromSettings();
 
-            return cert.Subject.Contains("Csaba Viktor Perényi");
-        }
-        catch (Exception ex)
-        {
-            LoggerService.Error($"Zertifikat konnte nicht geladen werden: {ex.Message}");
-            return false;
+                return cert.Thumbprint.Equals(
+                    "63F5F19AB3C31CEAF0E5B1284B5C4211F5F0DC1B",
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Error($"Zertifikat konnte nicht geladen werden: {ex.Message}");
+                return false;
+            }
         }
     }
-
 }
