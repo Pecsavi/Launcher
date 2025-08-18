@@ -8,12 +8,10 @@
         public string FolderName { get; set; }
 
     }
-    public class ConfigInfo
+    public class SettingsInfo
     {
-        public string Userlog { get; set; }
         public string UpdatePath { get; set; }
         public string VersionPath { get; set; }
-        public string LogPath { get; set; }
         public string ProgramBasePath { get; set; }
         public string CertificateUrl { get; set; }
     }

@@ -37,36 +37,32 @@ namespace Launcher
     public partial class MainWindow : MetroWindow
     {
 
-        private readonly IDialogCoordinator _dialogCoordinator;
-        private ProgramManager programManager;
+        public readonly IDialogCoordinator _dialogCoordinator;
         public static MainWindow Instance { get; private set; }
-        private readonly ProgramUpdater updater;
         string basePath;
 
 
         public MainWindow()
         {
             InitializeComponent();
+            SettingsReader.LoadSettingsInfo();
             Instance = this;
             this.Loaded += MainWindow_Loaded;
             DialogParticipation.SetRegister(this, this);
             _dialogCoordinator = DialogCoordinator.Instance;
             LoggerService.Info("Application started");
             LoggerService.UserActivity("Sign for Server");
-            updater = new ProgramUpdater(_dialogCoordinator, this);
-
+          
             Loaded += async (s, e) =>
             {
-                await updater.CheckForUpdates();
-                basePath = ConfigurationProvider.Settings.ProgramBasePath;
+              basePath = SettingsReader.Settings.ProgramBasePath;
                 if (string.IsNullOrWhiteSpace(basePath))
                 {
                     await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "ProgramBasePath fehlt in settings.json");
                     return;
                 }
-                programManager = new ProgramManager(basePath);
-
-                await GenerateProgramList();
+            await GenerateProgramList();
+            await UpdateManager.RunUpdateAsync();
 
             };
 
@@ -243,8 +239,6 @@ namespace Launcher
                 File.WriteAllLines("droppedfiles.txt", existing);
             }
         }
-
-
         private void LoadDroppedFiles()
         {
             var existing = File.Exists("droppedfiles.txt")

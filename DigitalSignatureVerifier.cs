@@ -20,7 +20,7 @@ public static class DigitalSignatureVerifier
         }
         catch (Exception ex)
         {
-            LoggerService.Error($"Tanúsítvány betöltése sikertelen: {ex.Message}");
+            LoggerService.Error($"Zertifikat konnte nicht geladen werden: {ex.Message}");
             return false;
         }
     }

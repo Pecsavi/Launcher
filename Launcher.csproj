@@ -8,6 +8,8 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'" />
+
   <ItemGroup>
     <None Remove="droppedfiles.txt" />
     <None Remove="nlog.config" />
@@ -40,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="ProgramManager.cs">
+    <Compile Update="ProgramInstaller.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>
