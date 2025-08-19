@@ -20,51 +20,49 @@ namespace Launcher
         {
             InitializeComponent();
             DataContext = this;
-            LoadUpdatesAsync();
+            LoadUpdates(MainWindow.ValidUpdates);
         }
 
-        private async void LoadUpdatesAsync()
+        private void LoadUpdates(List<(string ProgramName, string UpdateType)> validUpdates)
         {
-            try
+            bool hasUpdates = validUpdates.Count > 0;
+            if (!hasUpdates)
             {
-                var validUpdates = await UpdateManager.GetValidUpdatesAsync();
-                bool hasUpdates = validUpdates.Count > 0;
-
-                UpdatesAvailableChanged?.Invoke(hasUpdates);
-
-                if (!hasUpdates)
-                {
-                    await DialogCoordinator.Instance.ShowMessageAsync(this, "Info", "Alle Programme sind auf dem neuesten Stand.");
-                    UpdateItemsList.ItemsSource = null;
-                    return;
-                }
-
-                ItemsToInstall.Clear();
-                foreach (var u in validUpdates)
-                {
-                    ItemsToInstall.Add(new UpdateItem
-                    {
-                        ProgramName = u.ProgramName,
-                        UpdateType = u.UpdateType,
-                        IsSelected = true
-                    });
-                }
-
-
-                UpdateItemsList.ItemsSource = ItemsToInstall;
-
-                
+                UpdateItemsList.ItemsSource = null;
+                return;
             }
-            catch (Exception ex)
+
+            ItemsToInstall.Clear();
+            foreach (var u in validUpdates)
             {
-                await DialogCoordinator.Instance.ShowMessageAsync(this, "Fehler", $"Laden der Update-Liste fehlgeschlagen.:\n{ex.Message}");
+                ItemsToInstall.Add(new UpdateItem
+                {
+                    ProgramName = u.ProgramName,
+                    UpdateType = u.UpdateType,
+                    IsSelected = true
+                });
             }
+            UpdateItemsList.ItemsSource = ItemsToInstall;
         }
 
         private async void InstallButton_Click(object sender, RoutedEventArgs e)
         {
             var selectedUpdates = ItemsToInstall.Where(i => i.IsSelected).ToList();
             await ProgramInstaller.InstallAsync(selectedUpdates.Select(i => (i.ProgramName, i.UpdateType)).ToList());
+
+            foreach (var item in selectedUpdates)
+            {
+                var toRemove = ItemsToInstall.FirstOrDefault(i => i.ProgramName == item.ProgramName);
+                if (toRemove != null)
+                    ItemsToInstall.Remove(toRemove);
+            }
+
+            if (ItemsToInstall.Count == 0)
+            {
+                this.Close();
+            }
+
+
         }
 
         public class UpdateItem

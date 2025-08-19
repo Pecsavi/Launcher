@@ -23,7 +23,7 @@ public static class SetupFileChecker
             }
 
             string installerFileName = info.Installer;                             
-            string installerUrl = Path.Combine(updatePath, installerFileName);
+            string installerUrl = $"{updatePath.TrimEnd('/')}/{installerFileName}";
 
             try
             {

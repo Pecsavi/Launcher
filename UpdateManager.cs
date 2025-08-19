@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Launcher
 {
     public static class UpdateManager
     {
-        public static async Task RunUpdateAsync()
+        public static async Task<List<(string ProgramName, string UpdateType)>> GetValidUpdatesAsync()
         {
             LoggerService.Info("Update process started.");
 
@@ -15,20 +16,20 @@ namespace Launcher
             if (SettingsReader.Settings == null)
             {
                 LoggerService.Error("Settings not loaded. Update aborted.");
-                return;
+                return new();
             }
 
             // 2. Check internet connection and critical paths
             if (!SettingsReader.IsInternetAvailable())
             {
                 LoggerService.Error("No internet connection. Update aborted.");
-                return;
+                return new();
             }
 
             if (!SettingsReader.ValidateCriticalPaths(out string pathError))
             {
                 LoggerService.Error($"Critical path validation failed:\n{pathError}");
-                return;
+                return new();
             }
 
             // 3. Read ProgramsInfo.json
@@ -36,7 +37,7 @@ namespace Launcher
             if (remotePrograms.Count == 0)
             {
                 LoggerService.Error("No remote program info found. Update aborted.");
-                return;
+                return new();
             }
 
             // 4. Read local versions
@@ -47,41 +48,22 @@ namespace Launcher
             if (updateList.Count == 0)
             {
                 LoggerService.Info("All programs are up to date.");
-                return;
-            }
-
-            // 6. Check and download installers
-            var validUpdates = await SetupFileChecker.ValidateAndDownloadInstallers(updateList, remotePrograms, SettingsReader.Settings.UpdatePath);
-            if (validUpdates.Count == 0)
-            {
-                LoggerService.Error("No valid installers found. Update aborted.");
-                return;
-            }
-
-            
-        }
-
-        public static async Task<List<(string ProgramName, string UpdateType)>> GetValidUpdatesAsync()
-        {
-            SettingsReader.LoadSettingsInfo();
-            if (SettingsReader.Settings == null ||
-                !SettingsReader.IsInternetAvailable() ||
-                !SettingsReader.ValidateCriticalPaths(out _))
-            {
                 return new();
             }
 
-            var remotePrograms = ProgramsInfoReader.FetchProgramsInfo(SettingsReader.Settings.VersionPath);
-            var localVersions = VersionComparer.GetInstalledVersions(SettingsReader.Settings.ProgramBasePath);
-            var updateList = VersionComparer.CompareVersions(remotePrograms, localVersions);
-
+            // 6. Check and download installers
             var validUpdates = await SetupFileChecker.ValidateAndDownloadInstallers(
                 updateList.Select(u => (u.ProgramName, u.Status)).ToList(),
                 remotePrograms,
                 SettingsReader.Settings.UpdatePath);
 
+            if (validUpdates.Count == 0)
+            {
+                LoggerService.Error("No valid installers found. Update aborted.");
+                return new();
+            }
+
             return validUpdates;
         }
-
     }
 }

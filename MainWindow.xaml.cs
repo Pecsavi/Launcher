@@ -41,7 +41,7 @@ namespace Launcher
         public static MainWindow Instance { get; private set; }
         string basePath;
         private DroppedFileManager droppedFileManager = new DroppedFileManager();
-
+        public static List<(string ProgramName, string UpdateType)> ValidUpdates { get; private set; } = new();
 
 
         public MainWindow()
@@ -49,7 +49,7 @@ namespace Launcher
             InitializeComponent();
             SettingsReader.LoadSettingsInfo();
             Instance = this;
-            this.Loaded += MainWindow_Loaded;
+           
             DialogParticipation.SetRegister(this, this);
             _dialogCoordinator = DialogCoordinator.Instance;
             LoggerService.Info("Application started");
@@ -64,11 +64,11 @@ namespace Launcher
                     return;
                 }
                 await GenerateProgramList();
-                await UpdateManager.RunUpdateAsync();
+                var updates = await UpdateManager.GetValidUpdatesAsync();
+                MainWindow.ValidUpdates = updates;
+                OnUpdatesAvailableChanged(updates.Count > 0);
 
             };
-
-
             LoadDroppedFiles();
         }
         private void UpdateNotificationButton_Click(object sender, RoutedEventArgs e)
@@ -77,14 +77,7 @@ namespace Launcher
             updateWindow.Owner = this;
             updateWindow.ShowDialog();
         }
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-
-            var updateWindow = new UpdateWindow();
-            updateWindow.UpdatesAvailableChanged += OnUpdatesAvailableChanged;
-
-        }
-
+       
         private void OnUpdatesAvailableChanged(bool hasUpdates)
         {
             Dispatcher.Invoke(() =>
@@ -92,7 +85,6 @@ namespace Launcher
                 UpdateNotificationButton.Visibility = hasUpdates ? Visibility.Visible : Visibility.Collapsed;
             });
         }
-
 
         private async Task GenerateProgramList()
         {
