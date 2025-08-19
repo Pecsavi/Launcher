@@ -14,6 +14,7 @@ namespace Launcher
     public partial class UpdateWindow : MetroWindow
     {
         public ObservableCollection<UpdateItem> ItemsToInstall { get; set; } = new();
+        public event Action<bool> UpdatesAvailableChanged;
 
         public UpdateWindow()
         {
@@ -27,9 +28,13 @@ namespace Launcher
             try
             {
                 var validUpdates = await UpdateManager.GetValidUpdatesAsync();
-                if (validUpdates.Count == 0)
+                bool hasUpdates = validUpdates.Count > 0;
+
+                UpdatesAvailableChanged?.Invoke(hasUpdates);
+
+                if (!hasUpdates)
                 {
-                    await DialogCoordinator.Instance.ShowMessageAsync(this, "Info", "Minden program naprakész.");
+                    await DialogCoordinator.Instance.ShowMessageAsync(this, "Info", "Alle Programme sind auf dem neuesten Stand.");
                     UpdateItemsList.ItemsSource = null;
                     return;
                 }
@@ -47,10 +52,12 @@ namespace Launcher
 
 
                 UpdateItemsList.ItemsSource = ItemsToInstall;
+
+                
             }
             catch (Exception ex)
             {
-                await DialogCoordinator.Instance.ShowMessageAsync(this, "Hiba", $"Frissítési lista betöltése sikertelen:\n{ex.Message}");
+                await DialogCoordinator.Instance.ShowMessageAsync(this, "Fehler", $"Laden der Update-Liste fehlgeschlagen.:\n{ex.Message}");
             }
         }
 

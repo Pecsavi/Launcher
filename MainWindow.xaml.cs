@@ -79,8 +79,20 @@ namespace Launcher
         }
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            UpdateNotificationButton.Visibility = Visibility.Visible;
+
+            var updateWindow = new UpdateWindow();
+            updateWindow.UpdatesAvailableChanged += OnUpdatesAvailableChanged;
+
         }
+
+        private void OnUpdatesAvailableChanged(bool hasUpdates)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                UpdateNotificationButton.Visibility = hasUpdates ? Visibility.Visible : Visibility.Collapsed;
+            });
+        }
+
 
         private async Task GenerateProgramList()
         {

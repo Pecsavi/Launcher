@@ -51,7 +51,7 @@
               
          Margin="10"
          ToolTip="Neue Version verfugbar"
-         Visibility="Visible"
+         Visibility="Collapsed"
          Click="UpdateNotificationButton_Click"
          Panel.ZIndex="100">
 
