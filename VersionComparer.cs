@@ -43,7 +43,7 @@ public static class VersionComparer
             }
             else if (localVersion != remoteVersion)
             {
-                updateList.Add((name, "new version"));
+                updateList.Add((name, $"new version:{remoteVersion}"));
             }
         }
 

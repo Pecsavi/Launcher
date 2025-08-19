@@ -1,10 +1,12 @@
 # WPF Launcher
 
-This is a simple WPF-based launcher application designed to start external engineering tools located in a predefined folder. It dynamically lists available `.exe` files and allows launching them via a graphical interface. The application also supports drag-and-drop file handling and persists dropped files for later access.
+This is a simple WPF-based launcher application designed to start external engineering tools located in a designated installation folder. 
+It dynamically lists available `.exe` files and allows launching them via a graphical interface. 
+The application also supports drag-and-drop file handling and persists dropped files for later access.
 
 ## Features
 
-- Lists `.exe` files from `C:\Program Files (x86)\RstabExternal` and displays them as buttons.
+- Lists `.exe` files from the installation folder and displays them as buttons.
 - Launches external programs with a single click.
 - Shows descriptions from `description.txt` on right-click.
 - Supports drag-and-drop of files and remembers them across sessions.
@@ -18,11 +20,11 @@ This is a simple WPF-based launcher application designed to start external engin
 
 ## Usage
 
-1. Place your external tools in subfolders under `C:\Program Files (x86)\RstabExternal`.
+1. Place your external tools in subfolders under the installation folder.
 2. Optionally include a `description.txt` file in each subfolder for tool descriptions.
 3. Run the launcher to see and start the tools.
 4. Drag files into the window to store and reopen them later.
 
 ## License
 
-This project is released as open source and is publicly available.  
+This project is released as open source and is publicly available.

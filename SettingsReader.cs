@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.IO;
+using System.Net.Http;
 
 
 namespace Launcher
@@ -28,13 +29,13 @@ namespace Launcher
             var prop = typeof(SettingsInfo).GetProperty(key);
             return prop?.GetValue(Settings)?.ToString();
         }
-        public static bool ValidateCriticalPaths(out string errorMessage)
+        public static async Task<(bool IsValid, string ErrorMessage)> ValidateCriticalPathsAsync()
         {
-            errorMessage = string.Empty;
+            string errorMessage = string.Empty;
             if (Settings == null)
             {
                 errorMessage = "Settings not loaded.";
-                return false;
+                return (string.IsNullOrEmpty(errorMessage), errorMessage);
             }
 
             // Check VersionPath
@@ -47,9 +48,14 @@ namespace Launcher
                 // Check if URL is reachable
                 try
                 {
-                    var request = System.Net.WebRequest.Create(Settings.VersionPath);
-                    request.Method = "HEAD";
-                    using (var response = request.GetResponse()) { }
+                    using (var client = new HttpClient())
+                    {
+                        var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, Settings.VersionPath));
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            errorMessage += "VersionPath URL is not reachable.\n";
+                        }
+                    }
                 }
                 catch
                 {
@@ -67,7 +73,7 @@ namespace Launcher
             if (string.IsNullOrWhiteSpace(Settings.CertificateUrl))
                 errorMessage += "Missing CertificateUrl.\n";
 
-            return string.IsNullOrEmpty(errorMessage);
+            return (string.IsNullOrEmpty(errorMessage), errorMessage);
         }
         public static bool IsInternetAvailable()
         {

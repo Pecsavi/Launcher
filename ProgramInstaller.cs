@@ -41,7 +41,7 @@ namespace Launcher
                 if (result == MessageDialogResult.Affirmative)
                 {
                     LoggerService.Info("User chose to exit and install Launcher manually.");
-                    MainWindow.Instance.Close(); // bezárja az ablakot, kilépéshez
+                    MainWindow.Instance.Close(); // close the main window to allow the installer to run
                     return;
                 }
                 else

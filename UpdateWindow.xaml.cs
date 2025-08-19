@@ -59,6 +59,8 @@ namespace Launcher
 
             if (ItemsToInstall.Count == 0)
             {
+                if (MainWindow.Instance?.UpdateNotificationButton != null)
+                    MainWindow.Instance.UpdateNotificationButton.Visibility = System.Windows.Visibility.Collapsed;
                 this.Close();
             }
 

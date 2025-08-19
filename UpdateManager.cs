@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ControlzEx.Standard;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,9 +27,10 @@ namespace Launcher
                 return new();
             }
 
-            if (!SettingsReader.ValidateCriticalPaths(out string pathError))
+            var result = await SettingsReader.ValidateCriticalPathsAsync();
+            if (!result.IsValid)
             {
-                LoggerService.Error($"Critical path validation failed:\n{pathError}");
+                LoggerService.Error($"Critical path validation failed:\n{result.ErrorMessage}");
                 return new();
             }
 
