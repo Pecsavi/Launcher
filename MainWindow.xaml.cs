@@ -106,6 +106,11 @@ namespace Launcher
                                         .Where(f => !Path.GetFileName(f).StartsWith("unins", StringComparison.OrdinalIgnoreCase))
                                         .ToList();
 
+                exeFiles = exeFiles
+                    .Where(f => !Path.GetFileName(f).Contains("Launcher.exe", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+
                 if (exeFiles.Count == 0)
                     continue;
 
