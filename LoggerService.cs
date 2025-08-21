@@ -24,6 +24,12 @@ namespace Launcher
 
         static LoggerService()
         {
+            
+            if (!File.Exists("logs"))
+            {
+                Directory.CreateDirectory("logs");
+            }
+
             // load settings.json
             var configJson = File.ReadAllText("settings.json");
             var configDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(configJson);
