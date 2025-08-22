@@ -186,15 +186,10 @@ namespace Launcher
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                var existing = File.Exists("droppedfiles.txt") ? droppedFileManager.LoadFiles().ToList() : new List<string>();
-
-
 
                 foreach (var file in files)
                 {
-
-                    if (!existing.Contains(file))
-                        existing.Add(file);
+                    droppedFileManager.AddFile(file);
 
                     var container = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
 
@@ -216,40 +211,36 @@ namespace Launcher
                         }
                     };
 
-                    // Kontextusmenü létrehozása
                     var contextMenu = new ContextMenu();
 
                     var openItem = new MenuItem { Header = "Öffnen" };
                     openItem.Click += async (s, args) =>
                     {
                         try { Process.Start(new ProcessStartInfo(file) { UseShellExecute = true }); }
-                        catch (Exception ex) { await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Konnte nicht geöffnet werden: " + ex.Message); LoggerService.Warn("172. File konnte nicht geöffnet werden"); }
+                        catch (Exception ex)
+                        {
+                            await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Konnte nicht geöffnet werden: " + ex.Message);
+                            LoggerService.Warn("172. File konnte nicht geöffnet werden");
+                        }
                     };
 
                     var deleteItem = new MenuItem { Header = "Löschen" };
                     deleteItem.Click += (s, args) =>
                     {
                         FileListPanel.Children.Remove(container);
-                        existing.Remove(file);
-                        File.WriteAllLines("droppedfiles.txt", existing);
+                        droppedFileManager.RemoveFile(file);
                     };
 
                     contextMenu.Items.Add(openItem);
                     contextMenu.Items.Add(deleteItem);
                     fileButton.ContextMenu = contextMenu;
 
-
                     container.Children.Add(fileButton);
-
-
                     FileListPanel.Children.Add(container);
-
-
                 }
-
-                File.WriteAllLines("droppedfiles.txt", existing);
             }
         }
+
         private void LoadDroppedFiles()
         {
             var existing = File.Exists("droppedfiles.txt")
@@ -264,7 +255,7 @@ namespace Launcher
             var validFiles = lines.Where(File.Exists).ToList();
 
             if (validFiles.Count != lines.Count)
-                File.WriteAllLines(filePath, validFiles);
+            droppedFileManager.OverwriteFiles(validFiles);
 
             foreach (var file in lines)
             {
@@ -310,9 +301,7 @@ namespace Launcher
                 deleteItem.Click += (s, args) =>
                 {
                     FileListPanel.Children.Remove(container);
-                    var existing = droppedFileManager.LoadFiles().ToList();
-                    existing.Remove(file);
-                    File.WriteAllLines("droppedfiles.txt", existing);
+                    droppedFileManager.RemoveFile(file);
                 };
 
                 contextMenu.Items.Add(openItem);

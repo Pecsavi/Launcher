@@ -39,5 +39,17 @@ namespace Launcher
                 SaveFiles(files);
             }
         }
+
+        public void OverwriteFiles(List<string> files)
+        {
+            File.WriteAllLines(droppedFilesPath, files);
+        }
+        public void ClearFiles()
+        {
+            if (File.Exists(droppedFilesPath))
+            {
+                File.Delete(droppedFilesPath);
+            }
+        }
     }
 }
