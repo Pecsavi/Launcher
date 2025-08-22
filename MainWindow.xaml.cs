@@ -86,7 +86,7 @@ namespace Launcher
             });
         }
 
-        private async Task GenerateProgramList()
+        public async Task GenerateProgramList()
         {
 
 

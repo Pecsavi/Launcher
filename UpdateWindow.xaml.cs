@@ -21,6 +21,9 @@ namespace Launcher
             InitializeComponent();
             DataContext = this;
             LoadUpdates(MainWindow.ValidUpdates);
+
+            this.Closed += UpdateWindow_Closed;
+
         }
 
         private void LoadUpdates(List<(string ProgramName, string UpdateType)> validUpdates)
@@ -64,8 +67,14 @@ namespace Launcher
                 this.Close();
             }
 
-
         }
+
+        private async void UpdateWindow_Closed(object sender, EventArgs e)
+        {
+            MainWindow.Instance?.ProgramListPanel.Children.Clear();
+            await MainWindow.Instance?.GenerateProgramList();
+        }
+
 
         public class UpdateItem
         {
