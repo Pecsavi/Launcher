@@ -182,6 +182,7 @@ namespace Launcher
         }
 
         private void Window_Drop(object sender, DragEventArgs e)
+
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -189,7 +190,9 @@ namespace Launcher
 
                 foreach (var file in files)
                 {
+                  
                     droppedFileManager.AddFile(file);
+                    LoadDroppedFiles();
 
                     var container = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
 
@@ -236,31 +239,31 @@ namespace Launcher
                     fileButton.ContextMenu = contextMenu;
 
                     container.Children.Add(fileButton);
-                    FileListPanel.Children.Add(container);
+                    
                 }
+
+               
+
             }
         }
-
         private void LoadDroppedFiles()
         {
-            var existing = File.Exists("droppedfiles.txt")
-    ? droppedFileManager.LoadFiles().ToList()
-    : new List<string>();
+            Dispatcher.Invoke(() =>
+            {
 
-            string filePath = "droppedfiles.txt";
-            if (!File.Exists(filePath))
-                return;
+                FileListPanel.Children.Clear();
 
-            var lines = File.ReadAllLines(filePath).ToList();
+            });
+
+            var lines = droppedFileManager.LoadFiles();
             var validFiles = lines.Where(File.Exists).ToList();
 
             if (validFiles.Count != lines.Count)
-            droppedFileManager.OverwriteFiles(validFiles);
+                droppedFileManager.OverwriteFiles(validFiles);
 
-            foreach (var file in lines)
+            foreach (var file in validFiles)
             {
                 if (!File.Exists(file)) continue;
-                string currentFile = file;
 
                 var container = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
 
@@ -272,7 +275,6 @@ namespace Launcher
                     Margin = new Thickness(0, 5, 0, 0)
                 };
 
-
                 fileButton.Click += async (s, e) =>
                 {
                     try { Process.Start(new ProcessStartInfo(file) { UseShellExecute = true }); }
@@ -283,7 +285,6 @@ namespace Launcher
                     }
                 };
 
-                // Kontextmenu
                 var contextMenu = new ContextMenu();
 
                 var openItem = new MenuItem { Header = "Öffnen" };
@@ -309,14 +310,8 @@ namespace Launcher
                 fileButton.ContextMenu = contextMenu;
 
                 container.Children.Add(fileButton);
-
-
                 FileListPanel.Children.Add(container);
-
-
             }
         }
-
-
     }
 }

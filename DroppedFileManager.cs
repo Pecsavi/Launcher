@@ -6,7 +6,13 @@ namespace Launcher
 {
     public class DroppedFileManager
     {
-        private readonly string droppedFilesPath = "droppedfiles.txt";
+        //private readonly string droppedFilesPath = "droppedfiles.txt";
+
+        private readonly string droppedFilesPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Launcher",
+            "droppedfiles.txt"
+        );
 
         public List<string> LoadFiles()
         {
@@ -17,8 +23,10 @@ namespace Launcher
 
         public void SaveFiles(List<string> files)
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(droppedFilesPath));
             File.WriteAllLines(droppedFilesPath, files);
         }
+
 
         public void AddFile(string file)
         {
@@ -42,6 +50,7 @@ namespace Launcher
 
         public void OverwriteFiles(List<string> files)
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(droppedFilesPath));
             File.WriteAllLines(droppedFilesPath, files);
         }
         public void ClearFiles()

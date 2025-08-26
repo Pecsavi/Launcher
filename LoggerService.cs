@@ -21,14 +21,15 @@ namespace Launcher
         private static Logger programLogger = LogManager.GetLogger("ProgramLogger");
         private static Logger activityLogger = LogManager.GetLogger("ActivityLogger");
 
+        private static readonly string logPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Launcher", "logs", "logfile.log"
+        );
+
 
         static LoggerService()
         {
-            
-            if (!File.Exists("logs"))
-            {
-                Directory.CreateDirectory("logs");
-            }
+            Directory.CreateDirectory(Path.GetDirectoryName(logPath));
 
             // load settings.json
             var configJson = File.ReadAllText("settings.json");
@@ -42,7 +43,7 @@ namespace Launcher
             // File target
             var fileTarget = new FileTarget("logfile")
             {
-                FileName = "logs/logfile.log",
+                FileName = logPath,
                 Layout = "${longdate}|${level:uppercase=true}|${logger}|${message}"
             };
             nlogConfig.AddTarget(fileTarget);

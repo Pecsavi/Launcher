@@ -1,4 +1,5 @@
-﻿using MahApps.Metro.Controls.Dialogs;
+﻿using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,45 +11,15 @@ namespace Launcher
     public static class ProgramInstaller
     {
 
-        public static async Task InstallAsync(List<(string ProgramName, string Status)> updateList)
+        public static async Task InstallAsync(List<(string ProgramName, string Status)> updateList, MetroWindow dialogOwner)
         {
             LoggerService.Info("Starting installation process...");
 
-            bool launcherSelected = updateList.Any(u =>
-                ProgramsInfoReader.FetchProgramsInfo(SettingsReader.Settings.VersionPath)
-                .TryGetValue(u.ProgramName, out var info) &&
-                info.Executable.Equals("Launcher.exe", StringComparison.OrdinalIgnoreCase));
+            // Ensure Launcher is installed last to avoid self-update conflicts
+            updateList = updateList
+                .OrderBy(u => u.ProgramName.Equals("Launcher", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
+                .ToList();
 
-            if (launcherSelected)
-            {
-                string installerPath = Path.Combine(Path.GetTempPath(),
-                    ProgramsInfoReader.FetchProgramsInfo(SettingsReader.Settings.VersionPath)["Launcher"].Installer);
-
-                var result = await MainWindow.Instance._dialogCoordinator.ShowMessageAsync(
-                    MainWindow.Instance,
-                    "Launcher-Update",
-                    $"Der Launcher kann nicht automatisch aktualisiert werden, da er gerade ausgeführt wird.\n" +
-                    $"Die Installationsdatei wurde erfolgreich heruntergeladen:\n{installerPath}\n\n" +
-                    "Möchten Sie den Launcher jetzt beenden und die Installation manuell starten,\n" +
-                    "oder zuerst die anderen Programme installieren?",
-                    MessageDialogStyle.AffirmativeAndNegative,
-                    new MetroDialogSettings
-                    {
-                        AffirmativeButtonText = "Jetzt beenden und installieren",
-                        NegativeButtonText = "Andere Programme zuerst installieren"
-                    });
-
-                if (result == MessageDialogResult.Affirmative)
-                {
-                    LoggerService.Info("User chose to exit and install Launcher manually.");
-                    MainWindow.Instance.Close(); // close the main window to allow the installer to run
-                    return;
-                }
-                else
-                {
-                    LoggerService.Info("User chose to install other programs first.");
-                }
-            }
 
             foreach (var (programName, status) in updateList)
             {
@@ -74,6 +45,7 @@ namespace Launcher
                     };
                     process.Start();
                     LoggerService.Info($"Started installer for {programName}");
+                    await process.WaitForExitAsync();
                 }
                 catch (Exception ex)
                 {

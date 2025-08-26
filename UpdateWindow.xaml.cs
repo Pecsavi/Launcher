@@ -48,10 +48,10 @@ namespace Launcher
             UpdateItemsList.ItemsSource = ItemsToInstall;
         }
 
-        private async void InstallButton_Click(object sender, RoutedEventArgs e)
+        private async void InstallButton_Click(object? sender, RoutedEventArgs e)
         {
             var selectedUpdates = ItemsToInstall.Where(i => i.IsSelected).ToList();
-            await ProgramInstaller.InstallAsync(selectedUpdates.Select(i => (i.ProgramName, i.UpdateType)).ToList());
+            await ProgramInstaller.InstallAsync(selectedUpdates.Select(i => (i.ProgramName, i.UpdateType)).ToList(), this);
 
             foreach (var item in selectedUpdates)
             {
@@ -71,8 +71,13 @@ namespace Launcher
 
         private async void UpdateWindow_Closed(object sender, EventArgs e)
         {
-            MainWindow.Instance?.ProgramListPanel.Children.Clear();
-            await MainWindow.Instance?.GenerateProgramList();
+
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                MainWindow.Instance?.ProgramListPanel.Children.Clear();
+                await MainWindow.Instance?.GenerateProgramList();
+            });
+
         }
 
 
