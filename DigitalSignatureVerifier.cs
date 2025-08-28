@@ -1,5 +1,5 @@
-﻿
-using System;
+﻿using System;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Launcher
@@ -10,17 +10,45 @@ namespace Launcher
         {
             try
             {
-                var cert = CertificateLoader.LoadCertificateFromSettings();
+                if (!File.Exists(exePath))
+                {
+                    LoggerService.Warn($"Datei nicht gefunden: {exePath}");
+                    return false;
+                }
 
-                return cert.Thumbprint.Equals(
-                    "63F5F19AB3C31CEAF0E5B1284B5C4211F5F0DC1B",
-                    StringComparison.OrdinalIgnoreCase);
+                var expectedThumbprint = SettingsReader.Settings.ExpectedThumbprint;
+                if (string.IsNullOrWhiteSpace(expectedThumbprint))
+                {
+                    LoggerService.Warn("ExpectedThumbprint fehlt in settings.json");
+                    return false;
+                }
+
+                X509Certificate cert;
+                try
+                {
+                    cert = X509Certificate.CreateFromSignedFile(exePath);
+                }
+                catch (Exception ex)
+                {
+                    LoggerService.Warn($"Keine digitale Signatur gefunden in Datei: {exePath} – {ex.Message}");
+                    return false;
+                }
+
+                var actualThumbprint = cert.GetCertHashString();
+                if (!actualThumbprint.Equals(expectedThumbprint, StringComparison.OrdinalIgnoreCase))
+                {
+                    LoggerService.Warn($"Thumbprint stimmt nicht überein für Datei: {exePath}. Erwartet: {expectedThumbprint}, gefunden: {actualThumbprint}");
+                    return false;
+                }
+
+                return true;
             }
             catch (Exception ex)
             {
-                LoggerService.Error($"Zertifikat konnte nicht geladen werden: {ex.Message}");
+                LoggerService.Error($"Digitale Signaturprüfung fehlgeschlagen für Datei: {exePath} – {ex.Message}");
                 return false;
             }
         }
+
     }
 }

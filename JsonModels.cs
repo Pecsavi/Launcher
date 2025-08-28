@@ -15,7 +15,8 @@
         public string VersionPath { get; set; }
         public string LogPath { get; set; }
         public string ProgramBasePath { get; set; }
-        public string CertificateUrl { get; set; }
+        public string ExpectedThumbprint { get; set; }
+
     }
 
 }

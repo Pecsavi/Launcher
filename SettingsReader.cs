@@ -70,8 +70,10 @@ namespace Launcher
             if (string.IsNullOrWhiteSpace(Settings.ProgramBasePath) || !Directory.Exists(Settings.ProgramBasePath))
                 errorMessage += "Missing or invalid ProgramBasePath.\n";
 
-            if (string.IsNullOrWhiteSpace(Settings.CertificateUrl))
-                errorMessage += "Missing CertificateUrl.\n";
+
+            if (string.IsNullOrWhiteSpace(Settings.ExpectedThumbprint))
+                errorMessage += "Missing ExpectedThumbprint.\n";
+
 
             return (string.IsNullOrEmpty(errorMessage), errorMessage);
         }
