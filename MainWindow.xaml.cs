@@ -27,13 +27,8 @@ using System.Windows.Media;
 using static Launcher.UpdateWindow;
 
 
-
 namespace Launcher
 {
-
-
-
-
     public partial class MainWindow : MetroWindow
     {
 
@@ -180,9 +175,7 @@ namespace Launcher
 
             e.Handled = true;
         }
-
         private void Window_Drop(object sender, DragEventArgs e)
-
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -190,7 +183,6 @@ namespace Launcher
 
                 foreach (var file in files)
                 {
-                  
                     droppedFileManager.AddFile(file);
                     LoadDroppedFiles();
 
@@ -233,6 +225,7 @@ namespace Launcher
                         FileListPanel.Children.Remove(container);
                         droppedFileManager.RemoveFile(file);
                     };
+
                     var renameItem = new MenuItem { Header = "Umbenennen" };
                     renameItem.Click += async (s, args) =>
                     {
@@ -243,11 +236,12 @@ namespace Launcher
                             {
                                 fileButton.Content = input;
 
-                                // droppedfiles.txt frissítése: új név mentése
+                                // *** PERZISZTENS mentés a te Managereddel ***
                                 droppedFileManager.RemoveFile(file);
-                                droppedFileManager.AddFile(file); // ugyanaz a fájl, de a gomb felirata már más
+                                droppedFileManager.AddFile(file, input); // <-- ITT A LÉNYEG
 
-                                // opcionálisan: mentés külön névvel, ha a droppedfiles.txt formátuma bővíthető
+                                // Azonnali UI frissítés (opcionális)
+                                LoadDroppedFiles();
                             }
                             catch (Exception ex)
                             {
@@ -259,26 +253,24 @@ namespace Launcher
 
                     contextMenu.Items.Add(openItem);
                     contextMenu.Items.Add(deleteItem);
+                    contextMenu.Items.Add(renameItem);
                     fileButton.ContextMenu = contextMenu;
 
                     container.Children.Add(fileButton);
-                    
+
+                    // Ha azonnal látni szeretnéd a sort (nem csak a következő LoadDroppedFiles-ben), ezt add hozzá:
+                    // FileListPanel.Children.Add(container);
                 }
-
-               
-
             }
         }
         private void LoadDroppedFiles()
         {
             Dispatcher.Invoke(() =>
             {
-
                 FileListPanel.Children.Clear();
-
             });
 
-            var lines = droppedFileManager.LoadFiles();
+            var lines = droppedFileManager.LoadFiles(); // List<(string FilePath, string ButtonLabel)>
             var validFiles = lines.Where(f => File.Exists(f.FilePath)).ToList();
 
             if (validFiles.Count != lines.Count)
@@ -290,9 +282,13 @@ namespace Launcher
 
                 var container = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
 
+                var display = string.IsNullOrWhiteSpace(file.ButtonLabel)
+                              ? Path.GetFileName(file.FilePath)
+                              : file.ButtonLabel;
+
                 var fileButton = new Button
                 {
-                    Content = Path.GetFileName(file.FilePath),
+                    Content = display, 
                     Width = 200,
                     Height = 30,
                     Margin = new Thickness(0, 5, 0, 0)
@@ -328,13 +324,30 @@ namespace Launcher
                     droppedFileManager.RemoveFile(file.FilePath);
                 };
 
+                var renameItem = new MenuItem { Header = "Umbenennen" };
+                renameItem.Click += async (s, args) =>
+                {
+                    var input = await _dialogCoordinator.ShowInputAsync(this, "Button umbenennen", "Neuer Anzeigename:");
+                    if (!string.IsNullOrWhiteSpace(input))
+                    {
+                       
+                        droppedFileManager.RemoveFile(file.FilePath);
+                        droppedFileManager.AddFile(file.FilePath, input);
+
+                      
+                        LoadDroppedFiles();
+                    }
+                };
+
                 contextMenu.Items.Add(openItem);
                 contextMenu.Items.Add(deleteItem);
+                contextMenu.Items.Add(renameItem); 
                 fileButton.ContextMenu = contextMenu;
 
                 container.Children.Add(fileButton);
                 FileListPanel.Children.Add(container);
             }
         }
+                
     }
 }
