@@ -233,6 +233,29 @@ namespace Launcher
                         FileListPanel.Children.Remove(container);
                         droppedFileManager.RemoveFile(file);
                     };
+                    var renameItem = new MenuItem { Header = "Umbenennen" };
+                    renameItem.Click += async (s, args) =>
+                    {
+                        var input = await _dialogCoordinator.ShowInputAsync(this, "Button umbenennen", "Neuer Anzeigename:");
+                        if (!string.IsNullOrWhiteSpace(input))
+                        {
+                            try
+                            {
+                                fileButton.Content = input;
+
+                                // droppedfiles.txt frissítése: új név mentése
+                                droppedFileManager.RemoveFile(file);
+                                droppedFileManager.AddFile(file); // ugyanaz a fájl, de a gomb felirata már más
+
+                                // opcionálisan: mentés külön névvel, ha a droppedfiles.txt formátuma bővíthető
+                            }
+                            catch (Exception ex)
+                            {
+                                await _dialogCoordinator.ShowMessageAsync(this, "Fehler", $"Umbenennen fehlgeschlagen: {ex.Message}");
+                                LoggerService.Warn($"Button konnte nicht umbenannt werden: {ex.Message}");
+                            }
+                        }
+                    };
 
                     contextMenu.Items.Add(openItem);
                     contextMenu.Items.Add(deleteItem);
@@ -256,20 +279,20 @@ namespace Launcher
             });
 
             var lines = droppedFileManager.LoadFiles();
-            var validFiles = lines.Where(File.Exists).ToList();
+            var validFiles = lines.Where(f => File.Exists(f.FilePath)).ToList();
 
             if (validFiles.Count != lines.Count)
                 droppedFileManager.OverwriteFiles(validFiles);
 
             foreach (var file in validFiles)
             {
-                if (!File.Exists(file)) continue;
+                if (!File.Exists(file.FilePath)) continue;
 
                 var container = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
 
                 var fileButton = new Button
                 {
-                    Content = Path.GetFileName(file),
+                    Content = Path.GetFileName(file.FilePath),
                     Width = 200,
                     Height = 30,
                     Margin = new Thickness(0, 5, 0, 0)
@@ -277,7 +300,7 @@ namespace Launcher
 
                 fileButton.Click += async (s, e) =>
                 {
-                    try { Process.Start(new ProcessStartInfo(file) { UseShellExecute = true }); }
+                    try { Process.Start(new ProcessStartInfo(file.FilePath) { UseShellExecute = true }); }
                     catch (Exception ex)
                     {
                         await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Konnte nicht geöffnet werden: " + ex.Message);
@@ -290,7 +313,7 @@ namespace Launcher
                 var openItem = new MenuItem { Header = "Öffnen" };
                 openItem.Click += async (s, args) =>
                 {
-                    try { Process.Start(new ProcessStartInfo(file) { UseShellExecute = true }); }
+                    try { Process.Start(new ProcessStartInfo(file.FilePath) { UseShellExecute = true }); }
                     catch (Exception ex)
                     {
                         await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Konnte nicht geöffnet werden: " + ex.Message);
@@ -302,7 +325,7 @@ namespace Launcher
                 deleteItem.Click += (s, args) =>
                 {
                     FileListPanel.Children.Remove(container);
-                    droppedFileManager.RemoveFile(file);
+                    droppedFileManager.RemoveFile(file.FilePath);
                 };
 
                 contextMenu.Items.Add(openItem);

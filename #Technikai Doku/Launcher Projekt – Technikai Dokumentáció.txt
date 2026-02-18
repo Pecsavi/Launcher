@@ -1,0 +1,39 @@
+🧾 Launcher Projekt – Technikai Dokumentáció
+1. Projekt célja
+A Launcher egy WPF alapú keretprogram, amely lehetővé teszi saját fejlesztésű mérnöki programok listázását, indítását, valamint kapcsolódó dokumentumok (PDF, videó, leírás) megjelenítését. A program .NET 8 alatt fut, és az RSTAB 8 COM API-val kommunikáló alkalmazások támogatására készült.
+
+2. Technológiai stack
+Platform: Windows
+Nyelv: C#
+Framework: .NET 8
+UI: WPF + MahApps.Metro
+Verziókezelés: GitHub (Visual Studio integrációval)
+Digitális aláírás: Telepítők hitelesítése saját tanúsítvánnyal
+3. Fájlstruktúra
+settings.json: konfigurációs fájl, pl. ProgramBasePath
+droppedfiles.txt: helyi fájlok listája (drag-and-drop vagy szerkesztés alapján)
+version.json: szerveroldali verzióadatok (URL: https://pecsavi.hu/Programs/Versions/version.json)
+4. Funkciók
+4.1 Programlista betöltése
+A droppedfiles.txt alapján gombokat generál.
+A fájlnevek normalizálva vannak (szóközök, ékezetek eltávolítva).
+4.2 Verzióellenőrzés
+Indításkor a version.json alapján ellenőrzi az elérhető verziókat.
+Ha új verzió van, letölti és telepíti (csak ha digitálisan alá van írva).
+4.3 Új fájlok keresése (tervezett funkció)
+A szerveren elérhető programokat összeveti a helyi listával.
+Új programokat automatikusan hozzáadhat vagy figyelmeztetést küldhet.
+4.4 Felhasználói üzenetek
+MahApps.Metro stílusú ablakokkal jelennek meg.
+5. Nyelvi beállítások
+Felhasználói felület: német
+Fejlesztői kommunikáció: magyar
+Programon belüli elemek: angol
+6. Naplózás
+Indításkor: LoggerService.Info("Application started")
+Hibák, frissítések, telepítések naplózása
+7. További tervek
+Automatikus frissítési rendszer kiterjesztése új fájlokra
+PDF megjelenítő integrálása
+Verzióváltás előtti biztonsági mentés
+Egységes UI finomítás
