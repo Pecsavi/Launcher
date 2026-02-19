@@ -71,8 +71,8 @@ namespace Launcher
                 errorMessage += "Missing or invalid ProgramBasePath.\n";
 
 
-            if (string.IsNullOrWhiteSpace(Settings.ExpectedThumbprint))
-                errorMessage += "Missing ExpectedThumbprint.\n";
+           // if (string.IsNullOrWhiteSpace(Settings.ExpectedThumbprint))
+             //   errorMessage += "Missing ExpectedThumbprint.\n";
 
 
             return (string.IsNullOrEmpty(errorMessage), errorMessage);

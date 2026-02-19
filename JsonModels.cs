@@ -6,6 +6,7 @@
         public string Installer { get; set; }
         public string Executable { get; set; }
         public string FolderName { get; set; }
+        public string Sha256 { get; set; }
 
     }
     public class SettingsInfo
@@ -15,7 +16,8 @@
         public string VersionPath { get; set; }
         public string LogPath { get; set; }
         public string ProgramBasePath { get; set; }
-        public string ExpectedThumbprint { get; set; }
+        //public string ExpectedThumbprint { get; set; }
+        public string ExpectedPublisherCN { get; set; }
 
     }
 

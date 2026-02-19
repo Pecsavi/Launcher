@@ -37,6 +37,35 @@ public static class SetupFileChecker
                 // Download
 
                 string localPath = Path.Combine(Path.GetTempPath(), installerFileName);
+                using (var client = new HttpClient())
+                {
+                    var fileBytes = await client.GetByteArrayAsync(installerUrl);
+                    await File.WriteAllBytesAsync(localPath, fileBytes);
+                }
+
+                // Opcionális: SHA-256 integritás ellenőrzés, ha van megadva
+                if (!string.IsNullOrWhiteSpace(info.Sha256))
+                {
+                    var ok = await VerifySha256Async(localPath, info.Sha256);
+                    if (!ok)
+                    {
+                        LoggerService.Error($"SHA-256 mismatch: {installerFileName}");
+                        continue;
+                    }
+                }
+
+                // Digitális aláírás ellenőrzés
+                if (!DigitalSignatureVerifier.IsValid(localPath))
+                {
+                    LoggerService.Error($"Invalid digital signature: {installerFileName}");
+                    continue;
+                }
+
+                validUpdates.Add((programName, status));
+
+
+                /*
+                string localPath = Path.Combine(Path.GetTempPath(), installerFileName);
                 using var client = new HttpClient();
                 var fileBytes = await client.GetByteArrayAsync(installerUrl);
                 await File.WriteAllBytesAsync(localPath, fileBytes);
@@ -49,7 +78,7 @@ public static class SetupFileChecker
                     continue;
                 }
 
-                validUpdates.Add((programName, status));
+                validUpdates.Add((programName, status));*/
             }
             catch (Exception ex)
             {
@@ -71,6 +100,23 @@ public static class SetupFileChecker
             var response = await client.SendAsync(request);
             return response.IsSuccessStatusCode;
 
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    private static async Task<bool> VerifySha256Async(string path, string expectedHex)
+    {
+        try
+        {
+            using (var stream = File.OpenRead(path))
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+            {
+                var hash = await Task.Run(() => sha.ComputeHash(stream));
+                var actual = BitConverter.ToString(hash).Replace("-", "").ToUpperInvariant();
+                return string.Equals(actual, expectedHex?.Trim().ToUpperInvariant(), StringComparison.Ordinal);
+            }
         }
         catch
         {
